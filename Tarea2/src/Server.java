@@ -34,25 +34,8 @@ public class Server extends Thread{
 			while ((line = in.readLine()) != null) {//Se lee lo que escribio el socket cliente en el canal de lectura
 				System.out.println("Mensaje recibido: " + line);
 				
-				if(line.split("&")[0].split("=")[1].equals("msjnuevos")){
-					String puerto = line.split("&")[1];
-					List<String> list = new ArrayList<String>();
-					
-					list = extraermensajes(puerto);
-					
-					for(int i = 0;i< list.size();i++){
-			            //System.out.println(list.get(i));
-			            out.println(list.get(i));
-			            //elminar mensaje enviado***
-					}
-					
-					//out.println("Server OK"); //sacar esta cosa despues
-					out.println("fin###");
-					
-				}
-				else if (line.split("&")[3].split("=")[0].equals("mensaje"))
-				{
-					
+				if (line.split("&")[0].equals("mensaje"))
+				{	
 					agregarmensaje(line);
 					out.println("Server OK");
 					
@@ -64,6 +47,25 @@ public class Server extends Thread{
 	            	//String respuesta = b.readLine();
 	            	//System.out.println(respuesta);
 				}
+				else if(line.split("&")[0].equals("msjnuevos")){
+					String puerto = line.split("&")[1];
+					String ip = line.split("&")[2];
+					
+					List<String> list = new ArrayList<String>();
+					//System.out.println("puerto: "+ puerto +"   IP="+ip);
+					list = extraermensajes(puerto,ip);
+					
+					for(int i = 0;i< list.size();i++){
+			            //System.out.println(list.get(i));
+			            out.println(list.get(i));
+			            //elminar mensaje enviado***
+					}
+					
+					//out.println("Server OK"); //sacar esta cosa despues
+					out.println("fin###");
+					
+				}
+				
 				
 					
 				if (line.equals("by")) {
@@ -100,9 +102,9 @@ public class Server extends Thread{
              }
           }
 	}
-	List<String> extraermensajes(String port)
+	List<String> extraermensajes(String port,String ip)
 	{ 
-		File fichero = new File("mensajes.txt" );
+		File fichero = new File("mensajes.txt");
 	    BufferedReader entrada;
 	    List<String> list = new ArrayList<String>();
 	    
@@ -118,7 +120,7 @@ public class Server extends Thread{
 	        while(entrada.ready()){
 	        	linea = entrada.readLine();
 	        	
-	        	if(linea.split("&")[1].equals(port)){
+	        	if(linea.split("&")[2].equals(ip) && linea.split("&")[3].equals(port)){ 
 	        		list.add(linea);
 	        	}else{
 	        		pw.println(linea);	
