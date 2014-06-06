@@ -2,13 +2,15 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.DataInputStream;
-
+import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
@@ -55,18 +57,35 @@ public class Server extends Thread{
 							//System.out.println("puerto: "+ puerto +"   IP="+ip);
 							list = extraermensajes(puerto,ip);
 							
-							for(int i = 0;i< list.size();i++){
-					            //System.out.println(list.get(i));
+							for(int i = 0;i< list.size();i++){            
 					            out.println(list.get(i));
-					            //elminar mensaje enviado***
+					            
 							}
 							
-							//out.println("Server OK"); //sacar esta cosa despues
 							out.println("fin###");
 							
 						}
 						else if(line.split("&")[0].equals("archivo")){	
-							recibirfichero();
+							recibirfichero(line);
+							
+						}else if(line.split("&")[0].equals("ficherosnuevos")){
+							String puerto = line.split("&")[1];		
+							String ip = line.split("&")[2];
+							
+							List<String> archivos = new ArrayList<String>();
+							archivos = extraerfichero(ip,puerto);
+							for(int i = 0;i< archivos.size();i++){
+								
+								System.out.println(archivos.get(i));
+								out.println(archivos.get(i));       
+					            
+							}
+							out.println("fin###");
+						}
+						else if (line.split("&")[0].equals("enviar-archivo")){
+							
+							mandarfichero(line);
+							out.println("fin###");
 							
 						}
 	
@@ -81,8 +100,82 @@ public class Server extends Thread{
 			}
 	}
 	
-	void recibirfichero(){
+	void mandarfichero(String archivo){
+		 archivo = archivo.split("-")[1];
+		 BufferedInputStream bis;
+		 BufferedOutputStream bos;
+		 int in;
+		 byte[] byteArray;
+		 int puerto = Integer.parseInt(archivo.split("&")[3].split("=")[1]);
+
+		try{
+			
+			 final File localFile = new File(archivo);
+			 Socket client = new Socket("localhost", puerto);
+			 
+			  BufferedReader b = new BufferedReader (new InputStreamReader(client.getInputStream()));
+   		      PrintWriter enviar = new PrintWriter(new OutputStreamWriter(client.getOutputStream()),true);
+   		 
+   		
+			  enviar.println("recivirarchivo");
+			  String respuesta = b.readLine();
+    		  System.out.println(respuesta);
+			 //PrintWriter enviar = new PrintWriter(new OutputStreamWriter(client.getOutputStream()),true);
+         	 //BufferedReader b = new BufferedReader (new InputStreamReader(client.getInputStream()));
+         	  //enviar.println("enviandoarchivo");
+         	  
+			 bis = new BufferedInputStream(new FileInputStream(localFile));
+			 bos = new BufferedOutputStream(client.getOutputStream());
+			 //Enviamos el nombre del fichero
+			 DataOutputStream dos=new DataOutputStream(client.getOutputStream());
+			 dos.writeUTF(localFile.getName());
+			 //Enviamos el fichero
+			 byteArray = new byte[8192];
+			 while ((in = bis.read(byteArray)) != -1){
+				 bos.write(byteArray,0,in);
+			 }
+			 bis.close();
+			 bos.close();
+			 client.close();
+			 
+			 localFile.delete();
+			 
+			 
+		}catch ( Exception e ) {
+			System.err.println(e);
+		}
+	
+	}
+	List<String> extraerfichero(String ip, String puerto){
+		
+		String curDir = System.getProperty("user.dir");		
+		File dir = new File(curDir);
+		String[] ficheros = dir.list();
+		List<String> list = new ArrayList<String>();
+		List<String> archivos = new ArrayList<String>();
+		if (ficheros == null)
+			  System.out.println("No hay ficheros en el directorio especificado");
+		else { 
+		  for (int x=0;x<ficheros.length;x++)
+		    list.add(ficheros[x]);
+		}
+		for(int i = 0;i< list.size();i++){
+            
+            if(list.get(i).split("&").length ==7){        
+            	if(list.get(i).split("&")[2].equals(ip) && list.get(i).split("&")[3].equals(puerto)){
+            		archivos.add(list.get(i));
+            	}	
+            }
+		}
+		
+		return archivos;
+	}
+	void recibirfichero(String destino){
 		out.println("OK");
+		/**File folder = new File("archivos");
+		if (!folder.exists()) { 
+			folder.mkdir();
+		}	*/	
 		BufferedInputStream bis;
 		BufferedOutputStream bos;
 		byte[] receivedData;
@@ -106,6 +199,8 @@ public class Server extends Thread{
 			 bos.close();
 			 dis.close();
 			 
+			 File archivo=new File(destino.split("&")[6].split("=")[1]);
+		     archivo.renameTo(new File(destino));
 		 
 		 }catch (Exception e ) {
 			 System.err.println(e);
