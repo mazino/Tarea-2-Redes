@@ -20,7 +20,8 @@ import java.util.List;
 
 public class Server extends Thread{
 	
-
+	private static ServerSocket servidor;
+	static int puerto = 8080;
 	Socket scliente; //Socket cliente
 	static int fichero = 0;
 	PrintStream out; //Canal de escritura
@@ -30,70 +31,65 @@ public class Server extends Thread{
 	        scliente = sc;
 	 }
 	
-	public void run() // implementamos el metodo run
+	public void run() 
 	{	
-		//System.out.println(fichero);
-		
-			try {
-
-					//Obtengo una referencia a los canales de escritura y lectura del socket cliente
-					in = new BufferedReader( new InputStreamReader ( scliente.getInputStream() ) );
-					out = new PrintStream ( scliente.getOutputStream() );
-					
-					String line = "";
-					while ((line = in.readLine()) != null) {//Se lee lo que escribio el socket cliente en el canal de lectura
-						System.out.println("Mensaje recibido: " + line);
-						
-						if (line.split("&")[0].equals("mensaje"))
-						{	
-							agregarmensaje(line);
-							out.println("Server OK");
-						}
-						else if(line.split("&")[0].equals("msjnuevos")){
-							String puerto = line.split("&")[1];
-							String ip = line.split("&")[2];
-							
-							List<String> list = new ArrayList<String>();
-							//System.out.println("puerto: "+ puerto +"   IP="+ip);
-							list = extraermensajes(puerto,ip);
-							
-							for(int i = 0;i< list.size();i++){            
-					            out.println(list.get(i));
-					            
-							}
-							
-							out.println("fin###");
-							
-						}
-						else if(line.split("&")[0].equals("archivo")){	
-							recibirfichero(line);
-							
-						}else if(line.split("&")[0].equals("ficherosnuevos")){
-							String puerto = line.split("&")[1];		
-							String ip = line.split("&")[2];
-							
-							List<String> archivos = new ArrayList<String>();
-							archivos = extraerfichero(ip,puerto);
-							for(int i = 0;i< archivos.size();i++){
-								
-								System.out.println(archivos.get(i));
-								out.println(archivos.get(i));       
-					            
-							}
-							out.println("fin###");
-						}
-						else if (line.split("&")[0].equals("enviar-archivo")){
-							
-							mandarfichero(line);
-							out.println("fin###");
-							
-						}
-	
-					}
-				out.close();
-				in.close();
+		try {
+			//Se obtiene una referencia a los canales de escritura y lectura del socket cliente
+			in = new BufferedReader( new InputStreamReader ( scliente.getInputStream() ) );
+			out = new PrintStream ( scliente.getOutputStream() );
+			
+			String line = "";
+			while ((line = in.readLine()) != null) {//Se lee lo que escribio el socket cliente en el canal de lectura
+				System.out.println("Mensaje recibido: " + line);
 				
-				scliente.close();
+				if (line.split("&")[0].equals("mensaje"))
+				{	
+					agregarmensaje(line);
+					out.println("Server OK");
+				}
+				else if(line.split("&")[0].equals("msjnuevos")){
+					String puerto = line.split("&")[1];
+					String ip = line.split("&")[2];
+					
+					List<String> list = new ArrayList<String>();
+					list = extraermensajes(puerto,ip);
+					
+					for(int i = 0;i< list.size();i++){            
+			            out.println(list.get(i));
+			            
+					}
+					out.println("fin###");
+					
+				}
+				else if(line.split("&")[0].equals("archivo")){	
+					recibirfichero(line);
+					
+				}else if(line.split("&")[0].equals("ficherosnuevos")){
+					String puerto = line.split("&")[1];		
+					String ip = line.split("&")[2];
+					
+					List<String> archivos = new ArrayList<String>();
+					archivos = extraerfichero(ip,puerto);
+					for(int i = 0;i< archivos.size();i++){
+						
+						System.out.println(archivos.get(i));
+						out.println(archivos.get(i));       
+			            
+					}
+					out.println("fin###");
+				}
+				else if (line.split("&")[0].equals("enviar-archivo")){
+					
+					mandarfichero(line);
+					out.println("fin###");
+					
+				}
+
+			}
+			out.close();
+			in.close();
+			
+			scliente.close();
 				
 			} catch (IOException e) {
 				System.out.println("No puedo crear el socket");
@@ -111,7 +107,7 @@ public class Server extends Thread{
 		try{
 			
 			 final File localFile = new File(archivo);
-			 Socket client = new Socket("localhost", puerto);
+			 Socket client = new Socket(archivo.split("&")[2].split("=")[1], puerto); //cambiar localhost por archivo.split("&")[2].split("=")[1]
 			 
 			  BufferedReader b = new BufferedReader (new InputStreamReader(client.getInputStream()));
    		      PrintWriter enviar = new PrintWriter(new OutputStreamWriter(client.getOutputStream()),true);
@@ -120,9 +116,7 @@ public class Server extends Thread{
 			  enviar.println("recivirarchivo");
 			  String respuesta = b.readLine();
     		  System.out.println(respuesta);
-			 //PrintWriter enviar = new PrintWriter(new OutputStreamWriter(client.getOutputStream()),true);
-         	 //BufferedReader b = new BufferedReader (new InputStreamReader(client.getInputStream()));
-         	  //enviar.println("enviandoarchivo");
+			 
          	  
 			 bis = new BufferedInputStream(new FileInputStream(localFile));
 			 bos = new BufferedOutputStream(client.getOutputStream());
@@ -171,11 +165,7 @@ public class Server extends Thread{
 		return archivos;
 	}
 	void recibirfichero(String destino){
-		out.println("OK");
-		/**File folder = new File("archivos");
-		if (!folder.exists()) { 
-			folder.mkdir();
-		}	*/	
+		out.println("OK");	
 		BufferedInputStream bis;
 		BufferedOutputStream bos;
 		byte[] receivedData;
@@ -274,14 +264,13 @@ public class Server extends Thread{
 public static void main(String[] args) throws IOException {
 		 
 	
-		ServerSocket servidor = new ServerSocket(8080);
-		while(true )  // buscar forma para finalizar el servidor
+		 servidor = new ServerSocket(puerto);
+		
+		while(true ) 
 		{
 			 Server nuevoserver = new Server(servidor.accept()); 
 			 nuevoserver.start();
 		}
-		
-		//servidor.close();
 
 	}
 

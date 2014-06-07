@@ -1,0 +1,2 @@
+Nombre=cecilia&DirIP=192.168.2.102&Puerto=8020
+Nombre=juan&DirIP=127.0.0.1&Puerto=7070
