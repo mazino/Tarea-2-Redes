@@ -78,7 +78,7 @@ public class Server extends Thread{
 					}
 					out.println("fin###");
 				}
-				else if (line.split("&")[0].equals("enviar-archivo")){
+				else if (line.split("&")[0].equals("enviar##archivo")){
 					
 					mandarfichero(line);
 					out.println("fin###");
@@ -97,7 +97,7 @@ public class Server extends Thread{
 	}
 	
 	void mandarfichero(String archivo){
-		 archivo = archivo.split("-")[1];
+		 archivo = archivo.split("##")[1];
 		 BufferedInputStream bis;
 		 BufferedOutputStream bos;
 		 int in;
@@ -265,7 +265,7 @@ public static void main(String[] args) throws IOException {
 		 
 	
 		 servidor = new ServerSocket(puerto);
-		
+		 System.out.println("Arrancamos el servidor");
 		while(true ) 
 		{
 			 Server nuevoserver = new Server(servidor.accept()); 

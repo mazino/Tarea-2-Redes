@@ -1,0 +1,4 @@
+DirIP=127.0.0.1&Puerto=8020&destinatario=cecilia&mensaje=hola
+DirIP=127.0.0.1&Puerto=8020&destinatario=cecilia&mensaje=como+estas
+DirIP=127.0.0.1&Puerto=8000&destinatario=kuro&mensaje=hola+kurito
+DirIP=127.0.0.1&Puerto=8000&destinatario=kuro&mensaje=como+estas
